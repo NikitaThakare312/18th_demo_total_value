@@ -1,63 +1,71 @@
-
-const apiEndpoint = 'https://crudcrud.com/api/830c48dd7645451bb653552d9278e7ee/expenceTracker';
-
-let products = [];
-let totalAmount = 0;
-
-function addProduct() {
-    const productName = document.getElementById('productName').value;
-    const sellingPrice = parseFloat(document.getElementById('sellingPrice').value);
-
-    if (!productName || isNaN(sellingPrice)) {
-        alert('Please enter valid product information');
-        return;
+async function addExpense(event) {
+    try {
+    event.preventDefault();
+    const expense = event.target.amount.value;
+    const description = event.target.descrip.value;
+    const selecting = event.target.category.value;
+    const obj = {
+        expense,
+        description,
+        selecting
     }
+        const response = await axios.post("https://crudcrud.com/api/750ed1c4e1cc4cf4b2c6db6d4d62f7f8/addProduct", obj)
 
-    // Add product to the local array
-    products.push({ productName, sellingPrice });
+        showUserOnScreen(response.data)
+        console.log(response) 
 
-    // Update the UI
-    displayProducts();
-    updateTotalAmount();
-
-    // Send data to the server using Axios
-    axios.post(apiEndpoint, { productName, sellingPrice })
-        .then(response => {
-            console.log('Data sent to the server:', response.data);
-        })
-        .catch(error => {
-            console.error('Error sending data to the server:', error);
-        });
+    }
+    catch (err) {
+        console.log(err)
+    }
 }
 
-function displayProducts() {
-    const outputDiv = document.getElementById('output');
-    outputDiv.innerHTML = '';
+window.addEventListener("DOMContentLoaded", () => {
+    async function reload() {
+        try {
+            const response = await axios.get("https://crudcrud.com/api/750ed1c4e1cc4cf4b2c6db6d4d62f7f8/addProduct")
 
-    products.forEach(product => {
-        outputDiv.innerHTML += `<div>${product.productName} - Rs ${product.sellingPrice.toFixed(2)} <button onclick="deleteProduct('${product.productName}', ${product.sellingPrice})">Delete</button></div>`;
-    });
+            for (let i = 0; i < response.data.length; i++) {
+                showUserOnScreen(response.data[i])
+            }
+        }
+        catch (err) {
+            console.log(err)
+        }
+
+    }
+    reload()
+})
+
+function showUserOnScreen(user) {
+    let parentNode;
+    if (user.selecting == "Electronics") {
+        parentNode = document.getElementById('listOfUser1');
+    }
+    else if (user.selecting = "FoodItem") {
+        parentNode = document.getElementById('listOfUser2');
+    }
+    const childHTML = `<li id=${user._id}> ${user.expense} - ${user.description} - ${user.selecting}
+        <button onclick = deleteUser('${user._id}')> Delete User </button>
+        </li>`
+    parentNode.innerHTML = parentNode.innerHTML + childHTML;
+
 }
 
-function deleteProduct(productName, sellingPrice) {
-    // Delete the product from the local array
-    products = products.filter(product => product.productName !== productName || product.sellingPrice !== sellingPrice);
-
-    // Update the UI
-    displayProducts();
-    updateTotalAmount();
-
-    // Send a request to the server to delete the product
-    axios.delete(apiEndpoint + `/${productName}`)
-        .then(response => {
-            console.log('Product deleted from the server:', response.data);
-        })
-        .catch(error => {
-            console.error('Error deleting product from the server:', error);
-        });
+async function deleteUser(userId) {
+    try {
+        const response = await axios.delete(`https://crudcrud.com/api/750ed1c4e1cc4cf4b2c6db6d4d62f7f8/addproduct/${userId}`)
+        console.log(response)
+        removeUserFromScreen(userId)
+    }
+    catch (err) {
+        console.log(err)
+    }
 }
 
-function updateTotalAmount() {
-    totalAmount = products.reduce((total, product) => total + product.sellingPrice, 0);
-    document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+function removeUserFromScreen(userId) {
+    const childNodeToBeDeleted = document.getElementById(userId)
+    if (childNodeToBeDeleted) {
+        childNodeToBeDeleted.parentNode.removeChild(childNodeToBeDeleted)
+    }
 }
